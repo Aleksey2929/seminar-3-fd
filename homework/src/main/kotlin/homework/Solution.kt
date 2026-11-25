@@ -6,7 +6,6 @@ enum class Genre(val label: String) {
     SCIENCE("Наука")
 }
 
-
 object LibraryRules {
     fun loanDays(genre: Genre): Int {
         return when (genre) {
@@ -23,11 +22,6 @@ class Book(
     val author: String,
     val genre: Genre = Genre.FANTASY,
 ) {
-    data class BookInfo(
-        val title: String,
-        val author: String,
-        val genre: Genre
-    )
     var isAvailable: Boolean = true
         private set
 
@@ -54,18 +48,28 @@ class Book(
     }
 }
 
-
+data class BookInfo(
+    val title: String,
+    val author: String,
+    val genre: Genre
+)
 
 interface Notifier {
     fun send(message: String)
 }
 
-class ConsoleNotifier: Notifier {
-    override fun send(message: String) = println("${message}\n")
+class ConsoleNotifier : Notifier {
+    override fun send(message: String) {
+        println(message)
+    }
 }
-class CountingNotifier: Notifier {
+
+class CountingNotifier : Notifier {
     var sentCount: Int = 0
+        private set
     var lastMessage: String = ""
+        private set
+
     override fun send(message: String) {
         lastMessage = message
         sentCount++
@@ -81,17 +85,27 @@ class Library(private val books: Array<Book>, private val notifier: Notifier) {
     }
 
     fun borrowBook(id: Int): Boolean {
-        if (books[id].borrow()) {
-            notifier.send("Выдана книга: ${books[id].title}")
-            return true
+        for (book in books) {
+            if (book.id == id) {
+                if (book.borrow()) {
+                    notifier.send("Выдана книга: ${book.title}")
+                    return true
+                }
+                return false
+            }
         }
         return false
     }
 
     fun returnBook(id: Int): Boolean {
-        if (books[id].returnToLibrary()) {
-            notifier.send("Возвращена книга: ${books[id].title}")
-            return true
+        for (book in books) {
+            if (book.id == id) {
+                if (book.returnToLibrary()) {
+                    notifier.send("Возвращена книга: ${book.title}")
+                    return true
+                }
+                return false
+            }
         }
         return false
     }
@@ -104,33 +118,21 @@ class Library(private val books: Array<Book>, private val notifier: Notifier) {
         return count
     }
 
-    fun countByGenre(genre: Genre): Triple<Int, Int, Int> {
-        var count1 = 0
-        var count2 = 0
-        var count3 = 0
+    fun countByGenre(genre: Genre): Int {
+        var count = 0
         for (book in books) {
-            when (genre) {
-                Genre.FANTASY -> count1++
-                Genre.ADVENTURE -> count2++
-                Genre.SCIENCE -> count3++
-            }
+            if (book.genre == genre) count++
         }
-        return Triple(count1, count2, count3)
+        return count
     }
 
     fun report(): String {
-        var s: String = ""
+        if (books.isEmpty()) return "Библиотека пуста"
+        var s = ""
         for (book in books) {
-            var n: String = ""
-            if (book.borrow()) {
-                n="выдана"
-            } else {
-                n="доступна"
-            }
-
-            s += "${book.id}. ${book.title} - ${book.author}: ${n}\n"
+            val status = if (book.isAvailable) "доступна" else "выдана"
+            s += "${book.id}. ${book.title} — ${book.author}: $status\n"
         }
-        if (s.isNotBlank()) return s
-        return "Библиотека пуста"
+        return s.substring(0, s.length - 1)
     }
 }
