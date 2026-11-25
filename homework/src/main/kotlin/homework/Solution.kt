@@ -6,16 +6,14 @@ enum class Genre(val label: String) {
     SCIENCE("Наука")
 }
 
-fun loanDays(genre: Genre): Int = when (genre) {
-    Genre.FANTASY -> 21
-    Genre.ADVENTURE -> 14
-    Genre.SCIENCE -> 7
-}
-
 
 object LibraryRules {
     fun loanDays(genre: Genre): Int {
-        TODO()
+        return when (genre) {
+            Genre.FANTASY -> 21
+            Genre.ADVENTURE -> 14
+            Genre.SCIENCE -> 7
+        }
     }
 }
 
